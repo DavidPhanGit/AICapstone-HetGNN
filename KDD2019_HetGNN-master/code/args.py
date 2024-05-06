@@ -2,7 +2,7 @@ import argparse
 
 def read_args():
 	parser = argparse.ArgumentParser()
-	parser.add_argument('--data_path', type = str, default = '../data/academic_test/',
+	parser.add_argument('--data_path', type = str, default = '../data/academic/',
 				   help='path to data')
 	parser.add_argument('--model_path', type = str, default = '../model_save/',
 				   help='path to save model')
