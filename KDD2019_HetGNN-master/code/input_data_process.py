@@ -18,7 +18,7 @@ parser.add_argument('--V_n', type = int, default = 18,
 			   help = 'number of venue node')
 parser.add_argument('--C_n', type = int, default = 4,
 			   help = 'number of node class label')
-parser.add_argument('--data_path', type = str, default = '../data/academic_test/',
+parser.add_argument('--data_path', type = str, default = '../data/academic/',
 				   help='path to data')
 parser.add_argument('--walk_n', type = int, default = 10,
 			   help='number of walk per root node')
@@ -360,7 +360,7 @@ class input_data(object):
 #input_data_class.a_a_collaborate_train_test() #set author-author collaboration data 
 
 
-#input_data_class.a_p_citation_train_test() #set author-paper citation data 
+input_data_class.a_p_citation_train_test() #set author-paper citation data 
 
 
 #input_data_class.a_v_train_test() #generate author-venue data 

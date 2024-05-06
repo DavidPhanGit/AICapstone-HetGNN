@@ -13,7 +13,7 @@ import argparse
 parser = argparse.ArgumentParser(description = 'link prediction task')
 parser.add_argument('--C_n', type = int, default = 4,
 			   help = 'number of node class label')
-parser.add_argument('--data_path', type = str, default = '../data/academic_test/',
+parser.add_argument('--data_path', type = str, default = '../data/academic/',
 				   help='path to data')
 parser.add_argument('--embed_d', type = int, default = 128,
 			   help = 'embedding dimension')

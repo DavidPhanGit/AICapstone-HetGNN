@@ -20,7 +20,7 @@ parser.add_argument('--V_n', type = int, default = 18,
 			   help = 'number of venue node')
 parser.add_argument('--C_n', type = int, default = 4,
 			   help = 'number of node class label')
-parser.add_argument('--data_path', type = str, default = '../data/academic_test/',
+parser.add_argument('--data_path', type = str, default = '../data/academic/',
 				   help='path to data')
 parser.add_argument('--embed_d', type = int, default = 128,
 			   help = 'embedding dimension')
@@ -378,10 +378,10 @@ def a_class_cluster_feature_setting():
 # print("------author collaboration link prediction end------")
 
 
-# print("------author paper citation link prediction------")
-# train_num, test_num = a_p_cite_feature_setting() #setup of author-paper citation prediction task
-# LP.model(train_num, test_num)
-# print("------author paper citation link prediction end------")
+print("------author paper citation link prediction------")
+train_num, test_num = a_p_cite_feature_setting() #setup of author-paper citation prediction task
+LP.model(train_num, test_num)
+print("------author paper citation link prediction end------")
 
 
 # print("------venue recommendation------")

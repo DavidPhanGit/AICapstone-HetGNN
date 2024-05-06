@@ -16,7 +16,7 @@ tokenizer_cmd = ['./tokenizer.pl', '-l', 'en', '-q', '-']
 
 def read_args():
 	parser = argparse.ArgumentParser()
-	parser.add_argument('--data_path', type = str, default = '../data/academic_test/',
+	parser.add_argument('--data_path', type = str, default = '../data/academic/',
 				   help='path to data')
 	parser.add_argument('--A_n', type = int, default = 28646,
 				   help = 'number of author node')
