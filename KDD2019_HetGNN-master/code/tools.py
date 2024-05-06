@@ -68,7 +68,13 @@ class HetAgg(nn.Module):
 		a_text_embed_batch_2 = self.feature_list[7][id_batch, embed_d : embed_d * 2][0]
 		a_text_embed_batch_3 = self.feature_list[7][id_batch, embed_d * 2 : embed_d * 3][0]
 
-		concate_embed = torch.cat((a_net_embed_batch, a_text_embed_batch_1, a_text_embed_batch_2,\
+		#print("---Shape---")
+		#print(a_net_embed_batch.squeeze(0).shape, a_text_embed_batch_1.shape,\
+		#a_text_embed_batch_2.shape, a_text_embed_batch_3.shape)
+		#As shape of the four items are
+  		#torch.Size([1, 2000, 128]) torch.Size([2000, 128]) torch.Size([2000, 128]) torch.Size([2000, 128])
+		#We squeeze(0) a_net_embed_batch to match tensor size for torch.cat
+		concate_embed = torch.cat((a_net_embed_batch.squeeze(0), a_text_embed_batch_1, a_text_embed_batch_2,\
 		 a_text_embed_batch_3), 1).view(len(id_batch[0]), 4, embed_d)
 
 		concate_embed = torch.transpose(concate_embed, 0, 1)
@@ -102,8 +108,8 @@ class HetAgg(nn.Module):
 		v_text_embed_batch_3 = self.feature_list[9][id_batch, 2 * embed_d: 3 * embed_d][0]
 		v_text_embed_batch_4 = self.feature_list[9][id_batch, 3 * embed_d: 4 * embed_d][0]
 		v_text_embed_batch_5 = self.feature_list[9][id_batch, 4 * embed_d:][0]
-
-		concate_embed = torch.cat((v_net_embed_batch, v_text_embed_batch_1, v_text_embed_batch_2, v_text_embed_batch_3,\
+		#Squeezed v_net_embed_batch to match tensor size for torch.cat
+		concate_embed = torch.cat((v_net_embed_batch.squeeze(0), v_text_embed_batch_1, v_text_embed_batch_2, v_text_embed_batch_3,\
 			v_text_embed_batch_4, v_text_embed_batch_5), 1).view(len(id_batch[0]), 6, embed_d)
 
 		concate_embed = torch.transpose(concate_embed, 0, 1)
