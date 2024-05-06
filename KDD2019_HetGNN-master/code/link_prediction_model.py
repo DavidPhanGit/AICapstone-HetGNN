@@ -87,11 +87,11 @@ def model(train_num, test_num):
 		if (int(test_predict[i]) == 0 and int(test_target[i]) == 1):
 			false_n_count += 1
 
-	#print("accuracy: " + str(float(correct_count) / total_count))
+	print("accuracy: " + str(float(correct_count) / total_count))
 	precision = float(true_p_count) / (true_p_count + false_p_count)
-	#print("precision: " + str(precision))
+	print("precision: " + str(precision))
 	recall = float(true_p_count) / (true_p_count + false_n_count)
-	#print("recall: " + str(recall))
+	print("recall: " + str(recall))
 	F1 = float(2 * precision * recall) / (precision + recall)
 	print("F1: " + str(F1))
 
