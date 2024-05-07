@@ -12,15 +12,17 @@ import node_clustering_model as NCL
 
 
 parser = argparse.ArgumentParser(description = 'application data process')
-parser.add_argument('--A_n', type = int, default = 28646,
+parser.add_argument('--A_n', type = int, default = 116269,
 			   help = 'number of author node')
-parser.add_argument('--P_n', type = int, default = 21044,
+parser.add_argument('--P_n', type = int, default = 43822,
 			   help = 'number of paper node')
-parser.add_argument('--V_n', type = int, default = 18,
+parser.add_argument('--V_n', type = int, default = 3897,
 			   help = 'number of venue node')
-parser.add_argument('--C_n', type = int, default = 4,
+parser.add_argument('--T_n', type= int, default = 25758,
+			   help = 'number of topic node')
+parser.add_argument('--C_n', type = int, default = 3,
 			   help = 'number of node class label')
-parser.add_argument('--data_path', type = str, default = '../data/academic/',
+parser.add_argument('--data_path', type = str, default = '../bibtest_2015/',
 				   help='path to data')
 parser.add_argument('--embed_d', type = int, default = 128,
 			   help = 'embedding dimension')

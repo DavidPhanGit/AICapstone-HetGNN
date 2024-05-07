@@ -10,15 +10,16 @@ from itertools import *
 
 
 parser = argparse.ArgumentParser(description = 'input data process')
-parser.add_argument('--A_n', type = int, default = 28646,
+parser.add_argument('--A_n', type = int, default = 116269,
 			   help = 'number of author node')
-parser.add_argument('--P_n', type = int, default = 21044,
+parser.add_argument('--P_n', type = int, default = 43822,
 			   help = 'number of paper node')
-parser.add_argument('--V_n', type = int, default = 18,
+parser.add_argument('--V_n', type = int, default = 3897,
 			   help = 'number of venue node')
+parser.add_argument('--T_n', type = int, default = 25758)
 parser.add_argument('--C_n', type = int, default = 4,
 			   help = 'number of node class label')
-parser.add_argument('--data_path', type = str, default = '../data/academic/',
+parser.add_argument('--data_path', type = str, default = '../bibtest_2015/',
 				   help='path to data')
 parser.add_argument('--walk_n', type = int, default = 10,
 			   help='number of walk per root node')
@@ -26,7 +27,7 @@ parser.add_argument('--walk_L', type = int, default = 30,
 			   help='length of each walk')
 parser.add_argument('--window', type = int, default = 7,
 			   help='window size for relation extration')
-parser.add_argument('--T_split', type = int, default = 2012,
+parser.add_argument('--T_split', type = int, default = 2015,
 			   help = 'split time of train/test data')
 
 args = parser.parse_args()
@@ -351,7 +352,7 @@ class input_data(object):
 #input_data_class = input_data(args = args)
 
 
-#input_data_class.gen_het_rand_walk()
+input_data_class.gen_het_rand_walk()
 
 
 #input_data_class.gen_meta_rand_walk_APVPA()
@@ -360,7 +361,7 @@ class input_data(object):
 #input_data_class.a_a_collaborate_train_test() #set author-author collaboration data 
 
 
-input_data_class.a_p_citation_train_test() #set author-paper citation data 
+#input_data_class.a_p_citation_train_test() #set author-paper citation data 
 
 
 #input_data_class.a_v_train_test() #generate author-venue data 

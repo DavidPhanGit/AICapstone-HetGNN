@@ -2,16 +2,18 @@ import argparse
 
 def read_args():
 	parser = argparse.ArgumentParser()
-	parser.add_argument('--data_path', type = str, default = '../data/academic/',
+	parser.add_argument('--data_path', type = str, default = '../bibtest_2015/',
 				   help='path to data')
 	parser.add_argument('--model_path', type = str, default = '../model_save/',
 				   help='path to save model')
-	parser.add_argument('--A_n', type = int, default = 28646,
+	parser.add_argument('--A_n', type = int, default = 116269,
 				   help = 'number of author node')
-	parser.add_argument('--P_n', type = int, default = 21044,
+	parser.add_argument('--P_n', type = int, default = 43822,
 				   help = 'number of paper node')
-	parser.add_argument('--V_n', type = int, default = 18,
+	parser.add_argument('--V_n', type = int, default = 3897,
 				   help = 'number of venue node')
+	parser.add_argument('--T_n', type = int, default = 25758,
+				   help = 'number of topic node')
 	parser.add_argument('--in_f_d', type = int, default = 128,
 				   help = 'input feature dimension')
 	parser.add_argument('--embed_d', type = int, default = 128,
