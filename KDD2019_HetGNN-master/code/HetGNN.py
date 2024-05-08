@@ -18,6 +18,7 @@ class model_class(object):
 		self.gpu = args.cuda
 
 		input_data = data_generator.input_data(args = self.args)
+		print("Finished input_data")
 		#input_data.gen_het_rand_walk()
 
 		self.input_data = input_data
@@ -35,7 +36,7 @@ class model_class(object):
 		feature_list = [
 		input_data.p_v_net_embed, input_data.p_a_net_embed, input_data.p_ref_net_embed,\
 		input_data.p_net_embed, input_data.a_net_embed,\
-		input_data.v_net_embed]
+		input_data.v_net_embed, input_data.t_net_embed]
 
 		for i in range(len(feature_list)):
 			feature_list[i] = torch.from_numpy(np.array(feature_list[i])).float()
@@ -48,19 +49,22 @@ class model_class(object):
 		a_neigh_list_train = input_data.a_neigh_list_train
 		p_neigh_list_train = input_data.p_neigh_list_train
 		v_neigh_list_train = input_data.v_neigh_list_train
+		t_neigh_list_train = input_data.t_neigh_list_train
 
 		a_train_id_list = input_data.a_train_id_list
 		p_train_id_list = input_data.p_train_id_list
 		v_train_id_list = input_data.v_train_id_list
+		t_train_id_list = input_data.t_train_id_list
 
-		self.model = tools.HetAgg(args, feature_list, a_neigh_list_train, p_neigh_list_train, v_neigh_list_train,\
-		 a_train_id_list, p_train_id_list, v_train_id_list)
+		self.model = tools.HetAgg(args, feature_list, a_neigh_list_train, p_neigh_list_train, v_neigh_list_train, t_neigh_list_train,\
+		 a_train_id_list, p_train_id_list, v_train_id_list, t_train_id_list)
 
 		if self.gpu:
 			self.model.cuda()
 		self.parameters = filter(lambda p: p.requires_grad, self.model.parameters())
 		self.optim = optim.Adam(self.parameters, lr=self.args.lr, weight_decay = 0)
 		self.model.init_weights()
+		print("Finished init of model")
 
 
 	def model_train(self):

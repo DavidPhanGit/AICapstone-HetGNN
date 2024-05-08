@@ -6,7 +6,8 @@ import random
 import math
 from collections import Counter
 from itertools import *
-
+from tqdm import tqdm 
+import random
 
 class input_data(object):
 	def __init__(self, args):
@@ -16,12 +17,14 @@ class input_data(object):
 		p_a_list_train = [[] for k in range(self.args.P_n)]
 		p_p_cite_list_train = [[] for k in range(self.args.P_n)]
 		v_p_list_train = [[] for k in range(self.args.V_n)]
-
+		t_p_list_train = [[] for k in range(self.args.T_n)]
+		p_t_list_train = [[] for k in range(self.args.P_n)]
+		#p_t_list_train = [[] for k in range(self.args.P_n)]
 		#relation_f = ["a_p_list_train.txt", "p_a_list_train.txt",\
 		# "p_p_citation_list.txt", "v_p_list_train.txt"]
   
 		relation_f = ["a_p_list_train.txt", "p_a_list_train.txt",\
-		 "v_p_list_train.txt"]
+		 "v_p_list_train.txt", "t_p_list_train.txt", "p_t_list_train.txt"]
 
 		#store academic relational data 
 		for i in range(len(relation_f)):
@@ -41,6 +44,12 @@ class input_data(object):
 				#elif f_name == 'p_p_citation_list.txt':
 				#	for j in range(len(neigh_list_id)):
 				#		p_p_cite_list_train[node_id].append('p'+str(neigh_list_id[j]))
+				elif f_name == 't_p_list_train.txt':
+					for j in range(len(neigh_list_id)):
+						t_p_list_train[node_id].append('p'+str(neigh_list_id[j]))
+				elif f_name == 'p_t_list_train.txt':
+					for j in range(len(neigh_list_id)):
+						p_t_list_train[node_id].append('t'+str(neigh_list_id[j]))
 				else:
 					for j in range(len(neigh_list_id)):
 						v_p_list_train[node_id].append('p'+str(neigh_list_id[j]))
@@ -55,12 +64,13 @@ class input_data(object):
 			v_id = int(re.split(',',line)[1])
 			p_v[p_id] = v_id
 		p_v_f.close()
-
-		#paper neighbor: author + citation + venue
+ 
+		#paper neighbor: author + citation + venue + topic
 		p_neigh_list_train = [[] for k in range(self.args.P_n)]
 		for i in range(self.args.P_n):
 			p_neigh_list_train[i] += p_a_list_train[i]
 			p_neigh_list_train[i] += p_p_cite_list_train[i] 
+			p_neigh_list_train[i] += p_t_list_train[i]
 			p_neigh_list_train[i].append('v' + str(p_v[i]))
 		#print p_neigh_list_train[11846]
 
@@ -69,6 +79,8 @@ class input_data(object):
 		self.p_p_cite_list_train = p_p_cite_list_train
 		self.p_neigh_list_train = p_neigh_list_train
 		self.v_p_list_train = v_p_list_train
+		self.t_p_list_train = t_p_list_train
+		self.p_t_list_train = p_t_list_train
 
 		if self.args.train_test_label != 2:
 			self.triple_sample_p = self.compute_sample_p()
@@ -101,18 +113,21 @@ class input_data(object):
 			a_net_embed = np.zeros((self.args.A_n, self.args.in_f_d))
 			p_net_embed = np.zeros((self.args.P_n, self.args.in_f_d))
 			v_net_embed = np.zeros((self.args.V_n, self.args.in_f_d)) 
+			t_net_embed = np.zeros((self.args.T_n, self.args.in_f_d))
 			net_e_f = open(self.args.data_path + "node_embedding.txt", "r")
 			for line in islice(net_e_f, 1, None):
 				line = line.strip()
 				index = re.split(' ', line)[0]
-				if len(index) and (index[0] == 'a' or index[0] == 'v' or index[0] == 'p'):
+				if len(index) and (index[0] == 'a' or index[0] == 'v' or index[0] == 'p' or index[0] == 't'):
 					embeds = np.asarray(re.split(' ', line)[1:], dtype='float32')
 					if index[0] == 'a':
 						a_net_embed[int(index[1:])] = embeds
 					elif index[0] == 'v':
 						v_net_embed[int(index[1:])] = embeds
-					else:
+					elif index[0] == 'p':
 						p_net_embed[int(index[1:])] = embeds
+					else:
+						t_net_embed[int(index[1:])] = embeds
 			net_e_f.close()
 			print("Embedded 1")
 			p_v_net_embed = np.zeros((self.args.P_n, self.args.in_f_d))
@@ -189,13 +204,15 @@ class input_data(object):
 			#self.a_text_embed = a_text_embed
 			self.v_net_embed = v_net_embed
 			#self.v_text_embed = v_text_embed
+			self.t_net_embed = t_net_embed
 			print("starting het walk restart")
 			self.het_walk_restart()
 			print("finishing het walk restart")
 			#store neighbor set from random walk sequence 
-			a_neigh_list_train = [[[] for i in range(self.args.A_n)] for j in range(3)]
-			p_neigh_list_train = [[[] for i in range(self.args.P_n)] for j in range(3)]
-			v_neigh_list_train = [[[] for i in range(self.args.V_n)] for j in range(3)]
+			a_neigh_list_train = [[[] for i in range(self.args.A_n)] for j in range(4)]
+			p_neigh_list_train = [[[] for i in range(self.args.P_n)] for j in range(4)]
+			v_neigh_list_train = [[[] for i in range(self.args.V_n)] for j in range(4)]
+			t_neigh_list_train = [[[] for i in range(self.args.T_n)] for j in range(4)]
 			print("starting het neigh train")
 			het_neigh_train_f = open(self.args.data_path + "het_neigh_train.txt", "r")
 			for line in het_neigh_train_f:
@@ -211,6 +228,8 @@ class input_data(object):
 							a_neigh_list_train[1][int(node_id[1:])].append(int(neigh_list[j][1:]))
 						elif neigh_list[j][0] == 'v':
 							a_neigh_list_train[2][int(node_id[1:])].append(int(neigh_list[j][1:]))
+						elif neigh_list[j][0] == 't':
+							a_neigh_list_train[3][int(node_id[1:])].append(int(neigh_list[j][1:]))
 				elif node_id[0] == 'p' and len(node_id) > 1:
 					for j in range(len(neigh_list)):
 						if neigh_list[j][0] == 'a':
@@ -219,6 +238,8 @@ class input_data(object):
 							p_neigh_list_train[1][int(node_id[1:])].append(int(neigh_list[j][1:]))
 						if neigh_list[j][0] == 'v':
 							p_neigh_list_train[2][int(node_id[1:])].append(int(neigh_list[j][1:]))
+						if neigh_list[j][0] == 't':
+							a_neigh_list_train[3][int(node_id[1:])].append(int(neigh_list[j][1:]))
 				elif node_id[0] == 'v' and len(node_id) > 1:
 					for j in range(len(neigh_list)):
 						if neigh_list[j][0] == 'a':
@@ -227,18 +248,20 @@ class input_data(object):
 							v_neigh_list_train[1][int(node_id[1:])].append(int(neigh_list[j][1:]))
 						if neigh_list[j][0] == 'v':
 							v_neigh_list_train[2][int(node_id[1:])].append(int(neigh_list[j][1:]))	
+						if neigh_list[j][0] == 't':
+							a_neigh_list_train[3][int(node_id[1:])].append(int(neigh_list[j][1:]))
 			het_neigh_train_f.close()
 			#print a_neigh_list_train[0][1]
 			print("finished het neigh train")
-
 			print("Storing top neighbor set")
 			#store top neighbor set (based on frequency) from random walk sequence 
-			a_neigh_list_train_top = [[[] for i in range(self.args.A_n)] for j in range(3)]
-			p_neigh_list_train_top = [[[] for i in range(self.args.P_n)] for j in range(3)]
-			v_neigh_list_train_top = [[[] for i in range(self.args.V_n)] for j in range(3)]
-			top_k = [10, 10, 3] #fix each neighor type size 
+			a_neigh_list_train_top = [[[] for i in range(self.args.A_n)] for j in range(4)]
+			p_neigh_list_train_top = [[[] for i in range(self.args.P_n)] for j in range(4)]
+			v_neigh_list_train_top = [[[] for i in range(self.args.V_n)] for j in range(4)]
+			t_neigh_list_train_top = [[[] for i in range(self.args.T_n)] for j in range(4)]
+			top_k = [10, 10, 3, 10] #fix each neighor type size 
 			for i in range(self.args.A_n):
-				for j in range(3):
+				for j in range(4):
 					a_neigh_list_train_temp = Counter(a_neigh_list_train[j][i])
 					top_list = a_neigh_list_train_temp.most_common(top_k[j])
 					neigh_size = 0
@@ -253,7 +276,7 @@ class input_data(object):
 							a_neigh_list_train_top[j][i].append(random.choice(a_neigh_list_train_top[j][i]))
 
 			for i in range(self.args.P_n):
-				for j in range(3):
+				for j in range(4):
 					p_neigh_list_train_temp = Counter(p_neigh_list_train[j][i])
 					top_list = p_neigh_list_train_temp.most_common(top_k[j])
 					neigh_size = 0
@@ -268,7 +291,7 @@ class input_data(object):
 							p_neigh_list_train_top[j][i].append(random.choice(p_neigh_list_train_top[j][i]))
 
 			for i in range(self.args.V_n):
-				for j in range(3):
+				for j in range(4):
 					v_neigh_list_train_temp = Counter(v_neigh_list_train[j][i])
 					top_list = v_neigh_list_train_temp.most_common(top_k[j])
 					neigh_size = 0
@@ -281,18 +304,36 @@ class input_data(object):
 					if len(v_neigh_list_train_top[j][i]) and len(v_neigh_list_train_top[j][i]) < neigh_size:
 						for l in range(len(v_neigh_list_train_top[j][i]), neigh_size):
 							v_neigh_list_train_top[j][i].append(random.choice(v_neigh_list_train_top[j][i]))
+
+			for i in range(self.args.T_n):
+				for j in range(4):
+					t_neigh_list_train_temp = Counter(t_neigh_list_train[j][i])
+					top_list = t_neigh_list_train_temp.most_common(top_k[j])
+					neigh_size = 0
+					if j == 0 or j == 1:
+						neigh_size = 10
+					else:
+						neigh_size = 3
+					for k in range(len(top_list)):
+						t_neigh_list_train_top[j][i].append(int(top_list[k][0]))
+					if len(t_neigh_list_train_top[j][i]) and len(t_neigh_list_train_top[j][i]) < neigh_size:
+						for l in range(len(t_neigh_list_train_top[j][i]), neigh_size):
+							t_neigh_list_train_top[j][i].append(random.choice(t_neigh_list_train_top[j][i]))
+
 			print("Finished storing top neighbor set")
 			a_neigh_list_train[:] = []
 			p_neigh_list_train[:] = []
 			v_neigh_list_train[:] = []
+			t_neigh_list_train[:] = []
 
 			self.a_neigh_list_train = a_neigh_list_train_top
 			self.p_neigh_list_train = p_neigh_list_train_top
 			self.v_neigh_list_train = v_neigh_list_train_top
+			self.t_neigh_list_train = t_neigh_list_train_top
 
 			#store ids of author/paper/venue used in training 
-			train_id_list = [[] for i in range(3)]
-			for i in range(3):
+			train_id_list = [[] for i in range(4)]
+			for i in range(4):
 				if i == 0:
 					for l in range(self.args.A_n):
 						if len(a_neigh_list_train_top[i][l]):
@@ -303,14 +344,19 @@ class input_data(object):
 						if len(p_neigh_list_train_top[i][l]):
 							train_id_list[i].append(l)
 					self.p_train_id_list = np.array(train_id_list[i])
-				else:
+				elif i == 2:
 					for l in range(self.args.V_n):
 						if len(v_neigh_list_train_top[i][l]):
 							train_id_list[i].append(l)
 					self.v_train_id_list = np.array(train_id_list[i])
+				else:
+					for l in range(self.args.T_n):
+						if len(t_neigh_list_train_top[i][l]):
+							train_id_list[i].append(l)
+					self.t_train_id_list = np.array(train_id_list[i])
 			#print (len(self.v_train_id_list))		
 
-
+	'''
 	def het_walk_restart(self):
 		a_neigh_list_train = [[] for k in range(self.args.A_n)]
 		p_neigh_list_train = [[] for k in range(self.args.P_n)]
@@ -398,6 +444,119 @@ class input_data(object):
 						neigh_f.write(neigh_train[k] + ",")
 					neigh_f.write(neigh_train[-1] + "\n")
 		neigh_f.close()
+	'''
+
+	def het_walk_restart(self):
+		a_neigh_list_train = [[] for k in range(self.args.A_n)]
+		p_neigh_list_train = [[] for k in range(self.args.P_n)]
+		v_neigh_list_train = [[] for k in range(self.args.V_n)]
+		t_neigh_list_train = [[] for k in range(self.args.T_n)]
+
+		# generate neighbor set via random walk with restart
+		node_n = [self.args.A_n, self.args.P_n, self.args.V_n, self.args.T_n]
+		print("Loop 1")
+		for i in range(4):
+			print(node_n[i])
+			for j in tqdm(range(500), desc=f'Generating neighbors for type {i}'):
+				print(f"SUUUUU {j}")
+				if i == 0:
+					neigh_temp = self.a_p_list_train[j]
+					neigh_train = a_neigh_list_train[j]
+					curNode = "a" + str(j)
+				elif i == 1:
+					neigh_temp = self.p_a_list_train[j]
+					neigh_train = p_neigh_list_train[j]
+					curNode = "p" + str(j)
+				elif i == 2:
+					neigh_temp = self.v_p_list_train[j]
+					neigh_train = v_neigh_list_train[j]
+					curNode = "v" + str(j)
+				else:
+					neigh_temp = self.t_p_list_train[j]
+					neigh_train = t_neigh_list_train[j]
+					curNode = "t" + str(j)
+				if len(neigh_temp):
+					neigh_L = 0
+					a_L = 0
+					p_L = 0
+					v_L = 0
+					t_L = 0
+					while neigh_L < 100:  # maximum neighbor size = 100
+						rand_p = random.random()  # return p
+						if rand_p > 0.5:
+							if curNode[0] == "a":
+								curNode = random.choice(self.a_p_list_train[int(curNode[1:])])
+								if p_L < 46:  # size constraint (make sure each type of neighobr is sampled)
+									neigh_train.append(curNode)
+									neigh_L += 1
+									p_L += 1
+							elif curNode[0] == "p":
+								curNode = random.choice(self.p_neigh_list_train[int(curNode[1:])])
+								if curNode != ('a' + str(j)) and curNode[0] == 'a' and a_L < 46:
+									neigh_train.append(curNode)
+									neigh_L += 1
+									a_L += 1
+								elif curNode[0] == 'v':
+									if v_L < 11:
+										neigh_train.append(curNode)
+										neigh_L += 1
+										v_L += 1
+							elif curNode[0] == "v":
+								curNode = random.choice(self.v_p_list_train[int(curNode[1:])])
+								if p_L < 46:
+									neigh_train.append(curNode)
+									neigh_L += 1
+									p_L += 1
+							elif curNode[0] == "t":
+								curNode = random.choice(self.t_p_list_train[int(curNode[1:])])
+								if p_L < 46:
+									neigh_train.append(curNode)
+									neigh_L += 1
+									p_L += 1
+
+						else:
+							if i == 0:
+								curNode = ('a' + str(j))
+							elif i == 1:
+								curNode = ('p' + str(j))
+							elif i == 2:
+								curNode = ('v' + str(j))
+							else:
+								curNode = ('t' + str(j))
+		print("Loop 2")
+		for i in range(4):
+			for j in range(node_n[i]):
+				if i == 0:
+					a_neigh_list_train[j] = list(a_neigh_list_train[j])
+				elif i == 1:
+					p_neigh_list_train[j] = list(p_neigh_list_train[j])
+				elif i == 2:
+					v_neigh_list_train[j] = list(v_neigh_list_train[j])
+				elif i == 3:
+					t_neigh_list_train[j] = list(t_neigh_list_train[j])
+		print("Writing")
+		neigh_f = open(self.args.data_path + "het_neigh_train.txt", "w")
+		for i in range(4):
+			for j in range(node_n[i]):
+				if i == 0:
+					neigh_train = a_neigh_list_train[j]
+					curNode = "a" + str(j)
+				elif i == 1:
+					neigh_train = p_neigh_list_train[j]
+					curNode = "p" + str(j)
+				elif i == 2:
+					neigh_train = v_neigh_list_train[j]
+					curNode = "v" + str(j)
+				else:
+					neigh_train = t_neigh_list_train[j]
+					curNode = "t" + str(j)
+				if len(neigh_train):
+					neigh_f.write(curNode + ":")
+					for k in range(len(neigh_train) - 1):
+						neigh_f.write(neigh_train[k] + ",")
+					neigh_f.write(neigh_train[-1] + "\n")
+		neigh_f.close()
+
 
 
 	def compute_sample_p(self):
@@ -407,6 +566,7 @@ class input_data(object):
 		A_n = self.args.A_n
 		P_n = self.args.P_n
 		V_n = self.args.V_n
+		T_n = self.args.T_n
 
 		total_triple_n = [0.0] * 9 # nine kinds of triples
 		het_walk_f = open(self.args.data_path + "het_random_walk_test.txt", "r")
@@ -432,6 +592,8 @@ class input_data(object):
 									total_triple_n[1] += 1
 								elif neighNode[0] == 'v':
 									total_triple_n[2] += 1
+								elif neighNode[0] == 't':
+									total_triple_n[3] += 1
 					elif centerNode[0]=='p':
 						for k in range(j - window, j + window + 1):
 							if k and k < walk_L and k != j:
@@ -442,6 +604,8 @@ class input_data(object):
 									total_triple_n[4] += 1
 								elif neighNode[0] == 'v':
 									total_triple_n[5] += 1
+								elif neighNode[0] == 't':
+									total_triple_n[6] += 1
 					elif centerNode[0]=='v':
 						for k in range(j - window, j + window + 1):
 							if k and k < walk_L and k != j:
@@ -452,6 +616,8 @@ class input_data(object):
 									total_triple_n[7] += 1
 								elif neighNode[0] == 'v':
 									total_triple_n[8] += 1
+								elif neighNode[0] == 't':
+									total_triple_n[9] += 1
 		het_walk_f.close()
 
 		for i in range(len(total_triple_n)):
@@ -469,6 +635,7 @@ class input_data(object):
 		A_n = self.args.A_n
 		P_n = self.args.P_n
 		V_n = self.args.V_n
+		T_n = self.args.T_n
 		triple_sample_p = self.triple_sample_p # use sampling to avoid memory explosion
 
 		het_walk_f = open(self.args.data_path + "het_random_walk_test.txt", "r")
@@ -506,6 +673,12 @@ class input_data(object):
 										negNode = random.randint(0, V_n - 1)
 									triple = [int(centerNode[1:]), int(neighNode[1:]), int(negNode)]
 									triple_list[2].append(triple)
+								elif neighNode[0] == 't' and random.random() < triple_sample_p[3]:
+									negNode = random.randint(0, T_n - 1)
+									while len(self.t_p_list_train[negNode]) == 0:
+										negNode = random.randint(0, T_n - 1)
+									triple = [int(centerNode[1:]), int(neighNode[1:]), int(negNode)]
+									triple_list[3].append(triple)
 					elif centerNode[0]=='p':
 						for k in range(j - window, j + window + 1):
 							if k and k < walk_L and k != j:
@@ -528,6 +701,12 @@ class input_data(object):
 										negNode = random.randint(0, V_n - 1)
 									triple = [int(centerNode[1:]), int(neighNode[1:]), int(negNode)]
 									triple_list[5].append(triple)
+								elif neighNode[0] == 't' and random.random() < triple_sample_p[6]:
+									negNode = random.randint(0, T_n - 1)
+									while len(self.t_p_list_train[negNode]) == 0:
+										negNode = random.randint(0, T_n - 1)
+									triple = [int(centerNode[1:]), int(neighNode[1:]), int(negNode)]
+									triple_list[6].append(triple)
 					elif centerNode[0]=='v':
 						for k in range(j - window, j + window + 1):
 							if k and k < walk_L and k != j:
@@ -550,6 +729,41 @@ class input_data(object):
 										negNode = random.randint(0, V_n - 1)
 									triple = [int(centerNode[1:]), int(neighNode[1:]), int(negNode)]
 									triple_list[8].append(triple)
+								elif neighNode[0] == 't' and random.random() < triple_sample_p[9]:
+									negNode = random.randint(0, T_n - 1)
+									while len(self.t_p_list_train[negNode]) == 0:
+										negNode = random.randint(0, T_n - 1)
+									triple = [int(centerNode[1:]), int(neighNode[1:]), int(negNode)]
+									triple_list[9].append(triple)
+					elif centerNode[0] == 't':
+						for k in range(j - window, j + window + 1):
+							if k and k < walk_L and k != j:
+								neighNode = path[k]
+								if neighNode[0] == 'a' and random.random() < triple_sample_p[6]:
+									negNode = random.randint(0, A_n - 1)
+									while len(self.a_p_list_train[negNode]) == 0:
+										negNode = random.randint(0, A_n - 1)
+									triple = [int(centerNode[1:]), int(neighNode[1:]), int(negNode)]
+									triple_list[6].append(triple)
+								elif neighNode[0] == 'p' and random.random() < triple_sample_p[7]:
+									negNode = random.randint(0, P_n - 1)
+									while len(self.p_a_list_train[negNode]) == 0:
+										negNode = random.randint(0, P_n - 1)
+									triple = [int(centerNode[1:]), int(neighNode[1:]), int(negNode)]
+									triple_list[7].append(triple)
+								elif neighNode[0] == 'v' and random.random() < triple_sample_p[8]:
+									negNode = random.randint(0, V_n - 1)
+									while len(self.v_p_list_train[negNode]) == 0:
+										negNode = random.randint(0, V_n - 1)
+									triple = [int(centerNode[1:]), int(neighNode[1:]), int(negNode)]
+									triple_list[8].append(triple)
+								elif neighNode[0] == 't' and random.random() < triple_sample_p[9]:
+									negNode = random.randint(0, T_n - 1)
+									while len(self.t_p_list_train[negNode]) == 0:
+										negNode = random.randint(0, T_n - 1)
+									triple = [int(centerNode[1:]), int(neighNode[1:]), int(negNode)]
+									triple_list[9].append(triple)
+
 		het_walk_f.close()
 
 		return triple_list

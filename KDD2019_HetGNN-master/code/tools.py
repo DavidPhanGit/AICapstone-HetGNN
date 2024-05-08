@@ -11,8 +11,8 @@ args = read_args()
 
 
 class HetAgg(nn.Module):
-	def __init__(self, args, feature_list, a_neigh_list_train, p_neigh_list_train, v_neigh_list_train,\
-		 a_train_id_list, p_train_id_list, v_train_id_list):
+	def __init__(self, args, feature_list, a_neigh_list_train, p_neigh_list_train, v_neigh_list_train, t_neigh_list_train,\
+		 a_train_id_list, p_train_id_list, v_train_id_list, t_train_id_list):
 		super(HetAgg, self).__init__()
 		embed_d = args.embed_d
 		in_f_d = args.in_f_d
@@ -20,27 +20,33 @@ class HetAgg(nn.Module):
 		self.P_n = args.P_n
 		self.A_n = args.A_n
 		self.V_n = args.V_n
+		self.T_n = args.T_n
 		self.feature_list = feature_list
 		self.a_neigh_list_train = a_neigh_list_train
 		self.p_neigh_list_train = p_neigh_list_train
 		self.v_neigh_list_train = v_neigh_list_train
+		self.t_neigh_list_train = t_neigh_list_train
 		self.a_train_id_list = a_train_id_list
 		self.p_train_id_list = p_train_id_list
 		self.v_train_id_list = v_train_id_list
+		self.t_train_id_list = t_train_id_list
 
 		#self.fc_a_agg = nn.Linear(embed_d * 4, embed_d)
 			
 		self.a_content_rnn = nn.LSTM(embed_d, int(embed_d/2), 1, bidirectional = True)
 		self.p_content_rnn = nn.LSTM(embed_d, int(embed_d/2), 1, bidirectional = True)
 		self.v_content_rnn = nn.LSTM(embed_d, int(embed_d/2), 1, bidirectional = True)
+		self.t_content_rnn = nn.LSTM(embed_d, int(embed_d/2), 1, bidirectional = True)
 
 		self.a_neigh_rnn = nn.LSTM(embed_d, int(embed_d/2), 1, bidirectional = True)
 		self.p_neigh_rnn = nn.LSTM(embed_d, int(embed_d/2), 1, bidirectional = True)
 		self.v_neigh_rnn = nn.LSTM(embed_d, int(embed_d/2), 1, bidirectional = True)
+		self.t_neigh_rnn = nn.LSTM(embed_d, int(embed_d/2), 1, bidirectional = True)
 
 		self.a_neigh_att = nn.Parameter(torch.ones(embed_d * 2, 1), requires_grad = True)
 		self.p_neigh_att = nn.Parameter(torch.ones(embed_d * 2, 1), requires_grad = True)
 		self.v_neigh_att = nn.Parameter(torch.ones(embed_d * 2, 1), requires_grad = True)
+		self.t_neigh_att = nn.LSTM(embed_d, int(embed_d/2), 1, bidirectional = True)
 
 		self.softmax = nn.Softmax(dim = 1)
 		self.act = nn.LeakyReLU()
@@ -161,6 +167,8 @@ class HetAgg(nn.Module):
 				a_neigh_batch[i] = self.v_neigh_list_train[0][id_batch[i]]
 				p_neigh_batch[i] = self.v_neigh_list_train[1][id_batch[i]]
 				v_neigh_batch[i] = self.v_neigh_list_train[2][id_batch[i]]
+
+		
 
 		a_neigh_batch = np.reshape(a_neigh_batch, (1, -1))
 		a_agg_batch = self.node_neigh_agg(a_neigh_batch, 1)
