@@ -349,10 +349,10 @@ class input_data(object):
 
 
 
-#input_data_class = input_data(args = args)
+input_data_class = input_data(args = args)
 
 
-input_data_class.gen_het_rand_walk()
+#input_data_class.gen_het_rand_walk()
 
 
 #input_data_class.gen_meta_rand_walk_APVPA()

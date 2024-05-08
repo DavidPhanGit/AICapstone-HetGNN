@@ -24,10 +24,9 @@ def read_random_walk_corpus():
 
 
 walk_corpus = read_random_walk_corpus()
-model = Word2Vec(walk_corpus, size = dimen, window = window, min_count = 0, workers = 2, sg = 1, hs = 0, negative = 5)
+model = Word2Vec(walk_corpus, vector_size = dimen, window = window, min_count = 0, workers = 2, sg = 1, hs = 0, negative = 5)
 
 
 print("Output...")
-#model.wv.save_word2vec_format("../data/node_embedding.txt")
-model.wv.save_word2vec_format("../bibtest_2015/node_net_embedding.txt")
+model.wv.save_word2vec_format("../bibtest_2015/node_embedding.txt")
 

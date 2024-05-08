@@ -17,8 +17,11 @@ class input_data(object):
 		p_p_cite_list_train = [[] for k in range(self.args.P_n)]
 		v_p_list_train = [[] for k in range(self.args.V_n)]
 
+		#relation_f = ["a_p_list_train.txt", "p_a_list_train.txt",\
+		# "p_p_citation_list.txt", "v_p_list_train.txt"]
+  
 		relation_f = ["a_p_list_train.txt", "p_a_list_train.txt",\
-		 "p_p_citation_list.txt", "v_p_list_train.txt"]
+		 "v_p_list_train.txt"]
 
 		#store academic relational data 
 		for i in range(len(relation_f)):
@@ -35,9 +38,9 @@ class input_data(object):
 				elif f_name == 'p_a_list_train.txt':
 					for j in range(len(neigh_list_id)):
 						p_a_list_train[node_id].append('a'+str(neigh_list_id[j]))
-				elif f_name == 'p_p_citation_list.txt':
-					for j in range(len(neigh_list_id)):
-						p_p_cite_list_train[node_id].append('p'+str(neigh_list_id[j]))
+				#elif f_name == 'p_p_citation_list.txt':
+				#	for j in range(len(neigh_list_id)):
+				#		p_p_cite_list_train[node_id].append('p'+str(neigh_list_id[j]))
 				else:
 					for j in range(len(neigh_list_id)):
 						v_p_list_train[node_id].append('p'+str(neigh_list_id[j]))
@@ -70,6 +73,7 @@ class input_data(object):
 		if self.args.train_test_label != 2:
 			self.triple_sample_p = self.compute_sample_p()
 
+			'''
 			#store paper content pre-trained embedding
 			p_abstract_embed = np.zeros((self.args.P_n, self.args.in_f_d))
 			p_a_e_f = open(self.args.data_path + "p_abstract_embed.txt", "r")
@@ -91,12 +95,13 @@ class input_data(object):
 
 			self.p_abstract_embed = p_abstract_embed
 			self.p_title_embed = p_title_embed
+			'''
 
 			#store pre-trained network/content embedding
 			a_net_embed = np.zeros((self.args.A_n, self.args.in_f_d))
 			p_net_embed = np.zeros((self.args.P_n, self.args.in_f_d))
 			v_net_embed = np.zeros((self.args.V_n, self.args.in_f_d)) 
-			net_e_f = open(self.args.data_path + "node_net_embedding.txt", "r")
+			net_e_f = open(self.args.data_path + "node_embedding.txt", "r")
 			for line in islice(net_e_f, 1, None):
 				line = line.strip()
 				index = re.split(' ', line)[0]
@@ -109,7 +114,7 @@ class input_data(object):
 					else:
 						p_net_embed[int(index[1:])] = embeds
 			net_e_f.close()
-
+			print("Embedded 1")
 			p_v_net_embed = np.zeros((self.args.P_n, self.args.in_f_d))
 			p_v = [0] * self.args.P_n
 			p_v_f = open(self.args.data_path + "p_v.txt", "r")
@@ -120,7 +125,7 @@ class input_data(object):
 				p_v[p_id] = v_id
 				p_v_net_embed[p_id] = v_net_embed[v_id]
 			p_v_f.close()
-
+			print("Embedded 2")
 			p_a_net_embed = np.zeros((self.args.P_n, self.args.in_f_d))
 			for i in range(self.args.P_n):
 				if len(p_a_list_train[i]):
@@ -138,7 +143,7 @@ class input_data(object):
 					p_ref_net_embed[i] = p_ref_net_embed[i] / len(p_p_cite_list_train[i])
 				else:
 					p_ref_net_embed[i] = p_net_embed[i]
-
+			'''
 			#empirically use 3 paper embedding for author content embeding generation
 			a_text_embed = np.zeros((self.args.A_n, self.args.in_f_d * 3))
 			for i in range(self.args.A_n):
@@ -174,22 +179,24 @@ class input_data(object):
 
 					feature_temp = np.reshape(np.asarray(feature_temp), [1, -1])
 					v_text_embed[i] = feature_temp
-
+			'''
 			self.p_v = p_v
 			self.p_v_net_embed = p_v_net_embed
 			self.p_a_net_embed = p_a_net_embed
 			self.p_ref_net_embed = p_ref_net_embed
 			self.p_net_embed = p_net_embed
 			self.a_net_embed = a_net_embed
-			self.a_text_embed = a_text_embed
+			#self.a_text_embed = a_text_embed
 			self.v_net_embed = v_net_embed
-			self.v_text_embed = v_text_embed
-
+			#self.v_text_embed = v_text_embed
+			print("starting het walk restart")
+			self.het_walk_restart()
+			print("finishing het walk restart")
 			#store neighbor set from random walk sequence 
 			a_neigh_list_train = [[[] for i in range(self.args.A_n)] for j in range(3)]
 			p_neigh_list_train = [[[] for i in range(self.args.P_n)] for j in range(3)]
 			v_neigh_list_train = [[[] for i in range(self.args.V_n)] for j in range(3)]
-
+			print("starting het neigh train")
 			het_neigh_train_f = open(self.args.data_path + "het_neigh_train.txt", "r")
 			for line in het_neigh_train_f:
 				line = line.strip()
@@ -222,7 +229,9 @@ class input_data(object):
 							v_neigh_list_train[2][int(node_id[1:])].append(int(neigh_list[j][1:]))	
 			het_neigh_train_f.close()
 			#print a_neigh_list_train[0][1]
+			print("finished het neigh train")
 
+			print("Storing top neighbor set")
 			#store top neighbor set (based on frequency) from random walk sequence 
 			a_neigh_list_train_top = [[[] for i in range(self.args.A_n)] for j in range(3)]
 			p_neigh_list_train_top = [[[] for i in range(self.args.P_n)] for j in range(3)]
@@ -272,7 +281,7 @@ class input_data(object):
 					if len(v_neigh_list_train_top[j][i]) and len(v_neigh_list_train_top[j][i]) < neigh_size:
 						for l in range(len(v_neigh_list_train_top[j][i]), neigh_size):
 							v_neigh_list_train_top[j][i].append(random.choice(v_neigh_list_train_top[j][i]))
-
+			print("Finished storing top neighbor set")
 			a_neigh_list_train[:] = []
 			p_neigh_list_train[:] = []
 			v_neigh_list_train[:] = []
@@ -400,7 +409,7 @@ class input_data(object):
 		V_n = self.args.V_n
 
 		total_triple_n = [0.0] * 9 # nine kinds of triples
-		het_walk_f = open(self.args.data_path + "het_random_walk.txt", "r")
+		het_walk_f = open(self.args.data_path + "het_random_walk_test.txt", "r")
 		centerNode = ''
 		neighNode = ''
 
@@ -462,7 +471,7 @@ class input_data(object):
 		V_n = self.args.V_n
 		triple_sample_p = self.triple_sample_p # use sampling to avoid memory explosion
 
-		het_walk_f = open(self.args.data_path + "het_random_walk.txt", "r")
+		het_walk_f = open(self.args.data_path + "het_random_walk_test.txt", "r")
 		centerNode = ''
 		neighNode = ''
 		for line in het_walk_f:

@@ -32,6 +32,7 @@ print(args)
 
 
 def a_a_collab_feature_setting():
+	print("Starting")
 	a_embed = np.around(np.random.normal(0, 0.01, [args.A_n, args.embed_d]), 4)
 	embed_f = open(args.data_path + "node_embedding.txt", "r")
 	for line in islice(embed_f, 0, None):
@@ -374,16 +375,16 @@ def a_class_cluster_feature_setting():
 
 
 
-# print("------author collaboration link prediction------")
-# train_num, test_num = a_a_collab_feature_setting() #setup of author-author collaboration prediction task
-# LP.model(train_num, test_num)
-# print("------author collaboration link prediction end------")
-
-
-print("------author paper citation link prediction------")
-train_num, test_num = a_p_cite_feature_setting() #setup of author-paper citation prediction task
+print("------author collaboration link prediction------")
+train_num, test_num = a_a_collab_feature_setting() #setup of author-author collaboration prediction task
 LP.model(train_num, test_num)
-print("------author paper citation link prediction end------")
+print("------author collaboration link prediction end------")
+
+
+# print("------author paper citation link prediction------")
+# train_num, test_num = a_p_cite_feature_setting() #setup of author-paper citation prediction task
+# LP.model(train_num, test_num)
+# print("------author paper citation link prediction end------")
 
 
 # print("------venue recommendation------")

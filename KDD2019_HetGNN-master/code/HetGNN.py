@@ -27,10 +27,15 @@ class model_class(object):
 			print ("neighbor set generation finish")
 			exit(0)
 
-		feature_list = [input_data.p_abstract_embed, input_data.p_title_embed,\
+		#feature_list = [input_data.p_abstract_embed, input_data.p_title_embed,\
+		#input_data.p_v_net_embed, input_data.p_a_net_embed, input_data.p_ref_net_embed,\
+		#input_data.p_net_embed, input_data.a_net_embed, input_data.a_text_embed,\
+		#input_data.v_net_embed, input_data.v_text_embed]
+  
+		feature_list = [
 		input_data.p_v_net_embed, input_data.p_a_net_embed, input_data.p_ref_net_embed,\
-		input_data.p_net_embed, input_data.a_net_embed, input_data.a_text_embed,\
-		input_data.v_net_embed, input_data.v_text_embed]
+		input_data.p_net_embed, input_data.a_net_embed,\
+		input_data.v_net_embed]
 
 		for i in range(len(feature_list)):
 			feature_list[i] = torch.from_numpy(np.array(feature_list[i])).float()
