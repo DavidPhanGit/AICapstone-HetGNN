@@ -265,7 +265,7 @@ class input_data(object):
 					a_neigh_list_train_temp = Counter(a_neigh_list_train[j][i])
 					top_list = a_neigh_list_train_temp.most_common(top_k[j])
 					neigh_size = 0
-					if j == 0 or j == 1:
+					if j == 0 or j == 1 or j == 3:
 						neigh_size = 10
 					else:
 						neigh_size = 3
@@ -280,7 +280,7 @@ class input_data(object):
 					p_neigh_list_train_temp = Counter(p_neigh_list_train[j][i])
 					top_list = p_neigh_list_train_temp.most_common(top_k[j])
 					neigh_size = 0
-					if j == 0 or j == 1:
+					if j == 0 or j == 1 or j == 3:
 						neigh_size = 10
 					else:
 						neigh_size = 3
@@ -295,7 +295,7 @@ class input_data(object):
 					v_neigh_list_train_temp = Counter(v_neigh_list_train[j][i])
 					top_list = v_neigh_list_train_temp.most_common(top_k[j])
 					neigh_size = 0
-					if j == 0 or j == 1:
+					if j == 0 or j == 1 or j == 3:
 						neigh_size = 10
 					else:
 						neigh_size = 3
@@ -310,7 +310,7 @@ class input_data(object):
 					t_neigh_list_train_temp = Counter(t_neigh_list_train[j][i])
 					top_list = t_neigh_list_train_temp.most_common(top_k[j])
 					neigh_size = 0
-					if j == 0 or j == 1:
+					if j == 0 or j == 1 or j == 3:
 						neigh_size = 10
 					else:
 						neigh_size = 3
@@ -456,9 +456,7 @@ class input_data(object):
 		node_n = [self.args.A_n, self.args.P_n, self.args.V_n, self.args.T_n]
 		print("Loop 1")
 		for i in range(4):
-			print(node_n[i])
-			for j in tqdm(range(500), desc=f'Generating neighbors for type {i}'):
-				print(f"SUUUUU {j}")
+			for j in tqdm(range(node_n[i]), desc=f'Generating neighbors for type {i}'):
 				if i == 0:
 					neigh_temp = self.a_p_list_train[j]
 					neigh_train = a_neigh_list_train[j]
@@ -496,6 +494,10 @@ class input_data(object):
 									neigh_train.append(curNode)
 									neigh_L += 1
 									a_L += 1
+								elif curNode != ('t' + str(j) and curNode[0] == 't' and t_L < 46):
+									neigh_train.append(curNode)
+									neigh_L += 1
+									t_L += 1
 								elif curNode[0] == 'v':
 									if v_L < 11:
 										neigh_train.append(curNode)
@@ -568,7 +570,7 @@ class input_data(object):
 		V_n = self.args.V_n
 		T_n = self.args.T_n
 
-		total_triple_n = [0.0] * 9 # nine kinds of triples
+		total_triple_n = [0.0] * 16 # nine kinds of triples
 		het_walk_f = open(self.args.data_path + "het_random_walk_test.txt", "r")
 		centerNode = ''
 		neighNode = ''
@@ -599,37 +601,53 @@ class input_data(object):
 							if k and k < walk_L and k != j:
 								neighNode = path[k]
 								if neighNode[0] == 'a':
-									total_triple_n[3] += 1
-								elif neighNode[0] == 'p':
 									total_triple_n[4] += 1
-								elif neighNode[0] == 'v':
+								elif neighNode[0] == 'p':
 									total_triple_n[5] += 1
-								elif neighNode[0] == 't':
+								elif neighNode[0] == 'v':
 									total_triple_n[6] += 1
+								elif neighNode[0] == 't':
+									total_triple_n[7] += 1
 					elif centerNode[0]=='v':
 						for k in range(j - window, j + window + 1):
 							if k and k < walk_L and k != j:
 								neighNode = path[k]
 								if neighNode[0] == 'a':
-									total_triple_n[6] += 1
-								elif neighNode[0] == 'p':
-									total_triple_n[7] += 1
-								elif neighNode[0] == 'v':
 									total_triple_n[8] += 1
-								elif neighNode[0] == 't':
+								elif neighNode[0] == 'p':
 									total_triple_n[9] += 1
+								elif neighNode[0] == 'v':
+									total_triple_n[10] += 1
+								elif neighNode[0] == 't':
+									total_triple_n[11] += 1
+					elif centerNode[0]=='t':
+						for k in range(j - window, j + window + 1):
+							if k and k < walk_L and k != j:
+								neighNode = path[k]
+								if neighNode[0] == 'a':
+									total_triple_n[12] += 1
+								elif neighNode[0] == 'p':
+									total_triple_n[13] += 1
+								elif neighNode[0] == 'v':
+									total_triple_n[14] += 1
+								elif neighNode[0] == 't':
+									total_triple_n[15] += 1
 		het_walk_f.close()
-
-		for i in range(len(total_triple_n)):
-			total_triple_n[i] = self.args.batch_s / (total_triple_n[i] * 10)
-		print("sampling ratio computing finish.")
-
+		try:
+			for i in range(len(total_triple_n)):
+				total_triple_n[i] = self.args.batch_s / (total_triple_n[i] * 10)
+			print("sampling ratio computing finish.")
+		except ZeroDivisionError as e:
+			print("Error:", e)
+			print("batch_s size:", self.args.batch_s)
+			for j, value in enumerate(total_triple_n):
+				print(f"total_triple_n[{j}] * 10", value * 10)
 		return total_triple_n
 
 
 	def sample_het_walk_triple(self):
 		print ("sampling triple relations ...")
-		triple_list = [[] for k in range(9)]
+		triple_list = [[] for k in range(16)]
 		window = self.args.window
 		walk_L = self.args.walk_L
 		A_n = self.args.A_n
@@ -688,25 +706,25 @@ class input_data(object):
 									while len(self.a_p_list_train[negNode]) == 0:
 										negNode = random.randint(0, A_n - 1)
 									triple = [int(centerNode[1:]), int(neighNode[1:]), int(negNode)]
-									triple_list[3].append(triple)
+									triple_list[4].append(triple)
 								elif neighNode[0] == 'p' and random.random() < triple_sample_p[4]:
 									negNode = random.randint(0, P_n - 1)
 									while len(self.p_a_list_train[negNode]) == 0:
 										negNode = random.randint(0, P_n - 1)
 									triple = [int(centerNode[1:]), int(neighNode[1:]), int(negNode)]
-									triple_list[4].append(triple)
+									triple_list[5].append(triple)
 								elif neighNode[0] == 'v' and random.random() < triple_sample_p[5]:
 									negNode = random.randint(0, V_n - 1)
 									while len(self.v_p_list_train[negNode]) == 0:
 										negNode = random.randint(0, V_n - 1)
 									triple = [int(centerNode[1:]), int(neighNode[1:]), int(negNode)]
-									triple_list[5].append(triple)
+									triple_list[6].append(triple)
 								elif neighNode[0] == 't' and random.random() < triple_sample_p[6]:
 									negNode = random.randint(0, T_n - 1)
 									while len(self.t_p_list_train[negNode]) == 0:
 										negNode = random.randint(0, T_n - 1)
 									triple = [int(centerNode[1:]), int(neighNode[1:]), int(negNode)]
-									triple_list[6].append(triple)
+									triple_list[7].append(triple)
 					elif centerNode[0]=='v':
 						for k in range(j - window, j + window + 1):
 							if k and k < walk_L and k != j:
@@ -716,25 +734,25 @@ class input_data(object):
 									while len(self.a_p_list_train[negNode]) == 0:
 										negNode = random.randint(0, A_n - 1)
 									triple = [int(centerNode[1:]), int(neighNode[1:]), int(negNode)]
-									triple_list[6].append(triple)
+									triple_list[8].append(triple)
 								elif neighNode[0] == 'p' and random.random() < triple_sample_p[7]:
 									negNode = random.randint(0, P_n - 1)
 									while len(self.p_a_list_train[negNode]) == 0:
 										negNode = random.randint(0, P_n - 1)
 									triple = [int(centerNode[1:]), int(neighNode[1:]), int(negNode)]
-									triple_list[7].append(triple)
+									triple_list[9].append(triple)
 								elif neighNode[0] == 'v' and random.random() < triple_sample_p[8]:
 									negNode = random.randint(0, V_n - 1)
 									while len(self.v_p_list_train[negNode]) == 0:
 										negNode = random.randint(0, V_n - 1)
 									triple = [int(centerNode[1:]), int(neighNode[1:]), int(negNode)]
-									triple_list[8].append(triple)
+									triple_list[10].append(triple)
 								elif neighNode[0] == 't' and random.random() < triple_sample_p[9]:
 									negNode = random.randint(0, T_n - 1)
 									while len(self.t_p_list_train[negNode]) == 0:
 										negNode = random.randint(0, T_n - 1)
 									triple = [int(centerNode[1:]), int(neighNode[1:]), int(negNode)]
-									triple_list[9].append(triple)
+									triple_list[11].append(triple)
 					elif centerNode[0] == 't':
 						for k in range(j - window, j + window + 1):
 							if k and k < walk_L and k != j:
@@ -744,25 +762,25 @@ class input_data(object):
 									while len(self.a_p_list_train[negNode]) == 0:
 										negNode = random.randint(0, A_n - 1)
 									triple = [int(centerNode[1:]), int(neighNode[1:]), int(negNode)]
-									triple_list[6].append(triple)
+									triple_list[12].append(triple)
 								elif neighNode[0] == 'p' and random.random() < triple_sample_p[7]:
 									negNode = random.randint(0, P_n - 1)
 									while len(self.p_a_list_train[negNode]) == 0:
 										negNode = random.randint(0, P_n - 1)
 									triple = [int(centerNode[1:]), int(neighNode[1:]), int(negNode)]
-									triple_list[7].append(triple)
+									triple_list[13].append(triple)
 								elif neighNode[0] == 'v' and random.random() < triple_sample_p[8]:
 									negNode = random.randint(0, V_n - 1)
 									while len(self.v_p_list_train[negNode]) == 0:
 										negNode = random.randint(0, V_n - 1)
 									triple = [int(centerNode[1:]), int(neighNode[1:]), int(negNode)]
-									triple_list[8].append(triple)
+									triple_list[14].append(triple)
 								elif neighNode[0] == 't' and random.random() < triple_sample_p[9]:
 									negNode = random.randint(0, T_n - 1)
 									while len(self.t_p_list_train[negNode]) == 0:
 										negNode = random.randint(0, T_n - 1)
 									triple = [int(centerNode[1:]), int(neighNode[1:]), int(negNode)]
-									triple_list[9].append(triple)
+									triple_list[15].append(triple)
 
 		het_walk_f.close()
 

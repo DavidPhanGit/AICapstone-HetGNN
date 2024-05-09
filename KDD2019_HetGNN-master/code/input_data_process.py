@@ -45,9 +45,15 @@ class input_data(object):
 		p_p_cite_list_train = [[] for k in range(self.args.P_n)]
 		p_p_cite_list_test = [[] for k in range(self.args.P_n)]
 		v_p_list_train = [[] for k in range(self.args.V_n)]
+		t_p_list_train = [[] for k in range(self.args.T_n)]
+		t_p_list_test = [[] for k in range(self.args.T_n)]
+		p_t_list_train = [[] for k in range(self.args.P_n)]
+		p_t_list_test = [[] for k in range(self.args.P_n)]
+
 
 		relation_f = ["a_p_list_train.txt", "a_p_list_test.txt", "p_a_list_train.txt", "p_a_list_test.txt",\
-		 "p_p_cite_list_train.txt", "p_p_cite_list_test.txt", "v_p_list_train.txt"]
+		 "p_p_cite_list_train.txt", "p_p_cite_list_test.txt", "v_p_list_train.txt", "t_p_list_train.txt", "t_p_list_test.txt",\
+			'p_t_list_train.txt', 'p_t_list_test.txt']
 
 		#store academic relational data 
 		for i in range(len(relation_f)):
@@ -76,6 +82,18 @@ class input_data(object):
 				elif f_name == 'p_p_cite_list_test.txt':
 					for j in range(len(neigh_list_id)):
 						p_p_cite_list_test[node_id].append('p'+str(neigh_list_id[j]))
+				elif f_name == 't_p_list_train.txt':
+					for j in range(len(neigh_list_id)):
+						t_p_list_train[node_id].append('p'+str(neigh_list_id[j]))
+				elif f_name == 't_p_list_test.txt':
+					for j in range(len(neigh_list_id)):
+						t_p_list_test[node_id].append('p'+str(neigh_list_id[j]))
+				elif f_name == 'p_t_list_train.txt':
+					for j in range(len(neigh_list_id)):
+						p_t_list_train[node_id].append('t'+str(neigh_list_id[j]))
+				elif f_name == 'p_t_list_test.txt':
+					for j in range(len(neigh_list_id)):
+						p_t_list_train[node_id].append('t'+str(neigh_list_id[j]))
 				else:
 					for j in range(len(neigh_list_id)):
 						v_p_list_train[node_id].append('p'+str(neigh_list_id[j]))
@@ -93,12 +111,13 @@ class input_data(object):
 			p_v[p_id] = v_id
 		p_v_f.close()
 
-		#paper neighbor: author + citation + venue
+		#paper neighbor: author + citation + venue + topic
 		p_neigh_list_train = [[] for k in range(self.args.P_n)]
 		for i in range(self.args.P_n):
 			p_neigh_list_train[i] += p_a_list_train[i]
 			p_neigh_list_train[i] += p_p_cite_list_train[i] 
 			p_neigh_list_train[i].append('v' + str(p_v[i]))
+			p_neigh_list_train[i] += p_t_list_train[i]
 		#print p_neigh_list_train[11846]
 
 		self.a_p_list_train =  a_p_list_train
@@ -110,6 +129,10 @@ class input_data(object):
 		self.p_neigh_list_train = p_neigh_list_train
 		self.v_p_list_train = v_p_list_train
 		self.p_v = p_v
+		self.t_p_list_train = t_p_list_train
+		self.t_p_list_test = t_p_list_test
+		self.p_t_list_train = p_t_list_train 
+		self.p_t_list_test = p_t_list_test
 
 
 	def gen_het_rand_walk(self):
@@ -133,9 +156,13 @@ class input_data(object):
 							curNode = int(curNode[1:])
 							curNode = random.choice(self.v_p_list_train[curNode])
 							het_walk_f.write(curNode + " ")
+						elif curNode[0] == 't':
+							curNode = int(curNode[1:])
+							curNode = random.choice(self.t_p_list_train[curNode])
+							het_walk_f.write(curNode + " ") 
 					het_walk_f.write("\n")
 		het_walk_f.close()
-
+#NEED TO ADD T NODES TO HET_RANDOM_WALK_TEST
 
 	def gen_meta_rand_walk_APVPA(self):
 		meta_walk_f = open(self.args.data_path + "meta_random_walk_APVPA_test.txt", "w")
@@ -352,7 +379,7 @@ class input_data(object):
 input_data_class = input_data(args = args)
 
 
-#input_data_class.gen_het_rand_walk()
+input_data_class.gen_het_rand_walk()
 
 
 #input_data_class.gen_meta_rand_walk_APVPA()

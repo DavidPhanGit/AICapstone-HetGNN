@@ -111,7 +111,7 @@ class model_class(object):
 			if iter_i % self.args.save_model_freq == 0:
 				torch.save(self.model.state_dict(), self.args.model_path + "HetGNN_" + str(iter_i) + ".pt")
 				# save embeddings for evaluation
-				triple_index = 9 
+				triple_index = 16 
 				a_out, p_out, v_out = self.model([], triple_index)
 			print ('iteration ' + str(iter_i) + ' finish.')
 
